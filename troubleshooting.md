@@ -30,3 +30,24 @@ Remaining uncertainty: None for this specific issue.
 - Retest evidence: Executed `docker compose up -d` and verified `curl -s http://localhost:8080/` returns HTTP 200 response.
 - Related commit: `fix(nginx): correct port mappings and upstream configuration`
 - Remaining uncertainty: None.
+
+## Entry 3 / 2026-09-13 / 11:43
+Symptom: NGINX returns 502 Bad Gateway for incoming requests, and both app instances report identical INSTANCE_ID in responses.
+
+Hypothesis: Python application containers are binding to loopback (127.0.0.1), isolating them from NGINX on the Docker network, and app-02 environment config shares app-01 identifier.
+
+Command or test: cat docker-compose.yml and for i in {1..4}; do curl -s http://localhost:8080/instance; echo ""; done
+
+Actual output: APP_HOST was set to 127.0.0.1 under &app-env, and app-02 had INSTANCE_ID: "app-01". Requests to NGINX resulted in 502 Bad Gateway.
+
+Failed attempt and what changed your thinking: N/A (Direct compose configuration review revealed interface binding restrictions and duplicate environment variables).
+
+Root cause: APP_HOST restricted listener sockets to 127.0.0.1 inside containers, preventing inter-container proxy traffic from NGINX, alongside a copy-paste error setting INSTANCE_ID to app-01 for app-02.
+
+Fix: Updated APP_HOST to 0.0.0.0 in docker-compose.yml to listen on all container network interfaces, and corrected app-02 INSTANCE_ID to "app-02".
+
+Retest evidence: Executed docker compose up -d --build and verified for i in {1..4}; do curl -s http://localhost:8080/instance; echo ""; done successfully alternates responses between app-01 and app-02 with 200 OK.
+
+Related commit: fix(compose): update APP_HOST to 0.0.0.0 and correct app-02 instance ID
+
+Remaining uncertainty: None.
