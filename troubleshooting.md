@@ -51,3 +51,24 @@ Retest evidence: Executed docker compose up -d --build and verified for i in {1.
 Related commit: fix(compose): update APP_HOST to 0.0.0.0 and correct app-02 instance ID
 
 Remaining uncertainty: None.
+
+## Entry 4 / 2026-09-13 / 11:58
+Symptom: /ready, /records, and /counter endpoints return 503 SERVICE UNAVAILABLE with postgres_unavailable and redis_unavailable status messages.
+
+Hypothesis: Mismatched connection credentials and ports inside config/app.env preventing applications from reaching database services on the backend network.
+
+Command or test: cat config/app.env
+
+Actual output: DATABASE_URL referenced port 5433 and password BarqLabOnly_7qN2vK8d. REDIS_URL referenced port 6380.
+
+Failed attempt and what changed your thinking: N/A (Direct evaluation of connection string properties identified typo in password and incorrect non-standard container ports).
+
+Root cause: Incorrect internal port bindings (5432 vs 5433, 6379 vs 6380) and a typographical error in the PostgreSQL password within config/app.env.
+
+Fix: Corrected DATABASE_URL to postgresql://barq_app:BarqLabOnly_7qN2vK8c@postgres:5432/barq_tasks and REDIS_URL to redis://redis:6379/0 inside config/app.env.
+
+Retest evidence: Executed docker compose up -d and verified curl -i http://localhost:8080/ready returns 200 OK with healthy Postgres and Redis dependencies.
+
+Related commit: fix(config): correct postgres and redis ports and credentials in app.env
+
+Remaining uncertainty: None.
