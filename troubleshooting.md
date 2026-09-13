@@ -73,7 +73,7 @@ Related commit: fix(config): correct postgres and redis ports and credentials in
 
 Remaining uncertainty: None.
 
-### Entry #5: Infrastructure Hardening, Network Isolation, and Persistence Fixes
+### Entry #5: Infrastructure Hardening, Network Isolation, and Persistence Fixes ,2026-09-14 / 12:53
 - **Symptoms**: Initial docker-compose layout used temporary `tmpfs` storage for PostgreSQL, risking data loss on restart; Nginx shared the backend network exposing internal boundaries; missing resource limits and container restart policies violated baseline assessment rules.
 - **Hypotheses**: 
   1. Routing Nginx strictly through the frontend network while bridging Flask apps to both frontend and backend preserves complete security isolation.
