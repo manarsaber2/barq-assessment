@@ -1,0 +1,50 @@
+name: BARQ DevOps Assessment CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Create Environment File
+        run: cp .env.example .env
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Unit Tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Launch Docker Environment
+        run: docker compose -p barq-assessment up --build -d
+
+      - name: Execute System Validation Suite
+        run: python validate.py
+
+      - name: Execute Resilience & Failover Verification
+        run: python failure_test.py
+
+      - name: Test Database Backup & Restore Automation
+        run: |
+          chmod +x backup.sh restore.sh
+          ./backup.sh
+          ./restore.sh
+
+      - name: Teardown Docker Environment
+        if: always()
+        run: docker compose -p barq-assessment down -v
