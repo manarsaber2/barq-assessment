@@ -91,6 +91,12 @@ services:
           cpus: '0.25'
           memory: 128M
     depends_on: [app-01, app-02]
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     networks: [frontend]
 
 networks:
